@@ -26,7 +26,7 @@ EXPOSE 8080 8443 8778
 RUN microdnf install -y tzdata openssl curl ca-certificates fontconfig glibc-langpack-en gzip tar \
     && microdnf update -y; microdnf clean all
 
-LABEL name="ubi-jre11-minimal" \
+LABEL name="ubi-jdk11-minimal" \
       vendor="Oci-Images-Project" \
       version="jdk-11.0.13+8" \
       release="11" \
