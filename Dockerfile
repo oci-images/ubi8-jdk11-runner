@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.5-204
 
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
@@ -28,32 +28,28 @@ RUN microdnf install -y tzdata openssl curl ca-certificates fontconfig glibc-lan
 
 LABEL name="ubi-jre11-minimal" \
       vendor="Oci-Images-Project" \
-      version="jdk-11.0.11+9" \
+      version="jdk-11.0.13+8" \
       release="11" \
       run="docker run --rm -ti <image_name:tag> /bin/bash" \
-      summary="AdoptOpenJDK OCI Image for OpenJDK with hotspot and ubi-minimal for runs Java applications" \
+      summary="Adoptium Temurin  OCI Image for OpenJDK with hotspot and ubi-minimal for runs Java applications" \
       description="For more information on this image please see https://github.com/DemonAzteck/oci-images/tree/main/java/runner"
 
-ENV JAVA_VERSION jdk-11.0.11+9
+ENV JAVA_VERSION jdk-11.0.13+8
 
 RUN set -eux; \
-    ARCH="$(uname -m)"; \
+	ARCH="$(objdump="$(command -v objdump)" && objdump --file-headers "$objdump" | awk -F '[:,]+[[:space:]]+' '$1 == "architecture" { print $2 }')"; \
     case "${ARCH}" in \
        aarch64|arm64) \
-         ESUM='4966b0df9406b7041e14316e04c9579806832fafa02c5d3bd1842163b7f2353a'; \
-         BINARY_URL='https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.11%2B9/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.11_9.tar.gz'; \
+         ESUM='a77013bff10a5e9c59159231dd5c4bd071fc4c24beed42bd49b82803ba9506ef'; \
+         BINARY_URL='https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.13%2B8/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.13_8.tar.gz'; \
          ;; \
-       ppc64el|ppc64le) \
-         ESUM='945b114bd0a617d742653ac1ae89d35384bf89389046a44681109cf8e4f4af91'; \
-         BINARY_URL='https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.11%2B9/OpenJDK11U-jdk_ppc64le_linux_hotspot_11.0.11_9.tar.gz'; \
+       ppc64el|powerpc:common64) \
+         ESUM='82f14cda71cff99c878bf8400598a87235adb6c81b0337f7077c27e5cac1190c'; \
+         BINARY_URL='https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.13%2B8/OpenJDK11U-jdk_ppc64le_linux_hotspot_11.0.13_8.tar.gz'; \
          ;; \
-       s390x) \
-         ESUM='5d81979d27d9d8b3ed5bca1a91fc899cbbfb3d907f445ee7329628105e92f52c'; \
-         BINARY_URL='https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.11%2B9/OpenJDK11U-jdk_s390x_linux_hotspot_11.0.11_9.tar.gz'; \
-         ;; \
-       amd64|x86_64) \
-         ESUM='e99b98f851541202ab64401594901e583b764e368814320eba442095251e78cb'; \
-         BINARY_URL='https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.11%2B9/OpenJDK11U-jdk_x64_linux_hotspot_11.0.11_9.tar.gz'; \
+       amd64|i386:x86-64) \
+         ESUM='3b1c0c34be4c894e64135a454f2d5aaa4bd10aea04ec2fa0c0efe6bb26528e30'; \
+         BINARY_URL='https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.13%2B8/OpenJDK11U-jdk_x64_linux_hotspot_11.0.13_8.tar.gz'; \
          ;; \
        *) \
          echo "Unsupported arch: ${ARCH}"; \
@@ -72,6 +68,11 @@ ENV JAVA_HOME=/opt/java/openjdk \
 	JAVA_OPTIONS=\
 	JAVA_ARGS=\
     PATH="/opt/java/openjdk/bin:$PATH"
+	
+RUN echo Verifying install ... \
+    && echo javac --version && javac --version \
+    && echo java --version && java --version \
+    && echo Complete.
 WORKDIR /opt/app
 COPY java_runner.sh /opt/app
 RUN chown 1001 /opt/app; \
